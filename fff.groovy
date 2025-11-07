@@ -389,41 +389,6 @@ export default {
     },
 
     /**
-     * 检查蓝牙支持
-     */
-    checkBluetoothSupport() {
-      if (!navigator.bluetooth) {
-        this.$message.error('当前浏览器不支持蓝牙功能')
-        return false
-      }
-      return true
-    },
-
-    /**
-     * 扫描设备
-     */
-    scanDevices() {
-      if (!this.checkBluetoothSupport()) return
-     
-      this.$message.info('正在扫描蓝牙设备...')
-      navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
-        optionalServices: ['battery_service', 'generic_access', 'device_information']
-      })
-        .then(device => {
-          this.$message.success(`找到设备: ${device.name || '未知设备'}`)
-          this.deviceAddress = device.id
-          return device.gatt.connect()
-        })
-        .then(server => {
-          this.$message.success('蓝牙设备配对成功')
-        })
-        .catch(error => {
-          this.$message.error(`扫描失败: ${error.message}`)
-        })
-    },
-
-    /**
      * 其他方法保持不变
      */
     connectDevice() {
@@ -492,8 +457,6 @@ export default {
         try {
           this.websocket.send(JSON.stringify(startRecordMsg));
           this.$message.success('开始记录数据')
-          // 启动数据发送过程
-          this.sendEEGData();
         } catch (error) {
           this.$message.error('发送开始记录指令失败: ' + error.message)
           this.logContent += `[${new Date().toLocaleTimeString()}] 发送开始记录指令失败: ${error.message}\n`
@@ -634,6 +597,13 @@ export default {
           this.$message.error('API密钥测试失败: ' + error.message)
           this.logContent += `[${new Date().toLocaleTimeString()}] API密钥测试失败: ${error.message}\n`
         })
+    },
+
+    scanDevices() {
+      this.$message.info('正在扫描设备...')
+      setTimeout(() => {
+        this.$message.success('扫描完成')
+      }, 2000)
     }
   }
 }

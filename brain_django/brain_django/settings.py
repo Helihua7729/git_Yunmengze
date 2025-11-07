@@ -94,9 +94,9 @@ CHANNEL_LAYERS = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'brain_db',                    # 你的自定义数据库名
+        'NAME': 'brain_django',                    # 你的自定义数据库名
         'USER': 'root',                        # 改为 root 用户名
-        'PASSWORD': 'he100100',                    # 原密码（若 root 密码不是 3.14，替换为实际密码）
+        'PASSWORD': '3.14',                    # 原密码（若 root 密码不是 3.14，替换为实际密码）
         'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
