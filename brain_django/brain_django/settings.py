@@ -71,6 +71,10 @@ TEMPLATES = [
         },
     },
 ]
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
+
 # 添加Channels配置
 WSGI_APPLICATION = 'brain_django.wsgi.application'
 ASGI_APPLICATION = 'brain_django.asgi.application'

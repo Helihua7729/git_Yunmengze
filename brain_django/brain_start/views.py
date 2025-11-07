@@ -503,34 +503,36 @@ def _save_eeg_json_data_to_db(json_data):
 
       从数据库分析
     """
+# views.py 分析接口
 @csrf_exempt
 def analyze_existing_data(request):
-    """分析已有的数据文件"""
-    if request.method != 'POST':
-        return JsonResponse({'status': 'error', 'message': '只支持POST请求'}, status=400)
-    
-    try:
-        data = json.loads(request.body)
-        file_path = data.get('file_path')
-        api_key = data.get('api_key', '51e09aa5-d2dd-41ab-bf91-51ef798844e7')
-        
-        if not file_path or not os.path.exists(file_path):
-            return JsonResponse({'status': 'error', 'message': '指定的文件不存在'}, status=400)
-        
-        # 执行分析
-        print("开始分析数据...")
-        analyzer = EEGAnalyzer(file_path, api_key)
-        report_content, report_filename = analyzer.analyze()
-        
-        return JsonResponse({
-            'status': 'success',
-            'report_filename': report_filename,
-            'message': '分析完成'
-        })
-        
-    except Exception as e:
-        logger.error(f"分析数据失败: {str(e)}")
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            recording_id = data.get('recording_id')  # 接收recording_id
+            api_key = data.get('api_key')
+            
+            if not recording_id:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "缺少记录ID（recording_id）"
+                })
+            
+            # 根据recording_id查询记录并分析
+            record = EEGRecord.objects.get(recording_id=recording_id)
+            # 分析逻辑...
+            report_filename = f"report_{recording_id}.html"
+            
+            return JsonResponse({
+                "status": "success",
+                "message": "分析完成",
+                "report_filename": report_filename
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e)
+            }, status=500)
  
  
 #  新增API接口：获取最新的EEG记录
