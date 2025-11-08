@@ -89,6 +89,7 @@ class EEGDataConsumer(AsyncWebsocketConsumer):
             eeg_data = data.get('data', {})
             if isinstance(eeg_data, dict):
                 # 处理字典格式数据
+                logging.info("处理字典格式数据:{eeg_data}")
                 formatted_data = f"Delta {eeg_data.get('Delta', 0)} Theta {eeg_data.get('Theta', 0)} Alpha {eeg_data.get('Alpha', 0)} Beta {eeg_data.get('Beta', 0)} Gamma {eeg_data.get('Gamma', 0)}"
                 # 提取各波段数值用于数据库存储
                 delta = eeg_data.get('Delta', 0)
@@ -98,6 +99,7 @@ class EEGDataConsumer(AsyncWebsocketConsumer):
                 gamma = eeg_data.get('Gamma', 0)
             elif isinstance(eeg_data, str):
                 # 处理字符串格式数据（来自蓝牙设备的原始数据）
+                logging.info("处理字符串格式数据:{eeg_data}")
                 # 检查是否为TGAM数据包格式
                 if eeg_data.startswith('AA AA'):
                     # 解析TGAM数据包
@@ -123,6 +125,7 @@ class EEGDataConsumer(AsyncWebsocketConsumer):
             
             # 如果正在记录，则将数据写入数据库
             if current_recording is not None:
+                logger.info(f"尝试保存数据点到数据库，记录ID: {current_recording.recording_id}")
                 from django.utils.dateparse import parse_datetime
                 from asgiref.sync import sync_to_async
                 from django.utils import timezone
@@ -136,7 +139,7 @@ class EEGDataConsumer(AsyncWebsocketConsumer):
                 from .models import EEGDataPoint
                 
                 # 异步创建数据点
-                await sync_to_async(EEGDataPoint.objects.create)(
+                data_point = await sync_to_async(EEGDataPoint.objects.create)(
                     recording=current_recording,
                     time=timestamp,
                     delta=delta,
@@ -151,9 +154,11 @@ class EEGDataConsumer(AsyncWebsocketConsumer):
                     meditation=0,
                     signal_quality=0
                 )
+                logger.info(f"成功创建数据点，ID: {data_point.id}")
                 
                 # 增加记录的数据点计数
                 await self.increment_data_count(current_recording)
+                logger.info(f"更新记录计数，当前计数: {current_recording.data_count}")
             
             # 发送确认消息
             await self.send(text_data=json.dumps({
@@ -231,7 +236,7 @@ class EEGDataConsumer(AsyncWebsocketConsumer):
     async def start_recording(self, data):
         """开始记录数据到数据库"""
         global current_recording
-        
+        logging.info("Starting recording")
         async with recording_lock:
             if current_recording is not None:
                 await self.send(text_data=json.dumps({
@@ -247,19 +252,29 @@ class EEGDataConsumer(AsyncWebsocketConsumer):
                 recording_description = data.get('description', 'EEG数据记录')
                 
                 current_recording = await self.create_eeg_record(recording_name, recording_description)
+                recording_id = str(current_recording.recording_id)
                 
                 await self.send(text_data=json.dumps({
                     'type': 'recording_status',
                     'status': 'started',
-                    'recording_id': current_recording.recording_id,
-                    'message': f'开始记录，记录ID: {current_recording.recording_id}'
+                    'recording_id': recording_id,
+                    'message': f'开始记录，记录ID: {recording_id}'
                 }))
                 
             except Exception as e:
                 logger.error(f"启动记录失败: {str(e)}")
+                # 确保在错误情况下正确处理UUID序列化
+                recording_id = None
+                if 'current_recording' in locals() and current_recording is not None:
+                    try:
+                        recording_id = str(current_recording.recording_id)
+                    except:
+                        pass
+                current_recording = None
                 await self.send(text_data=json.dumps({
                     'type': 'recording_status',
                     'status': 'error',
+                    'recording_id': recording_id,
                     'message': f'启动记录失败: {str(e)}'
                 }))
 
@@ -282,7 +297,7 @@ class EEGDataConsumer(AsyncWebsocketConsumer):
                 current_recording.end_time = timezone.now()
                 await self.update_eeg_record(current_recording)
                 
-                recording_id = current_recording.recording_id
+                recording_id = str(current_recording.recording_id)
                 current_recording = None
                 
                 await self.send(text_data=json.dumps({
@@ -294,9 +309,18 @@ class EEGDataConsumer(AsyncWebsocketConsumer):
                 
             except Exception as e:
                 logger.error(f"停止记录失败: {str(e)}")
+                # 确保即使出错也将current_recording设为None
+                recording_id = None
+                if current_recording is not None:
+                    try:
+                        recording_id = str(current_recording.recording_id)
+                    except:
+                        pass
+                current_recording = None
                 await self.send(text_data=json.dumps({
                     'type': 'recording_status',
                     'status': 'error',
+                    'recording_id': recording_id,
                     'message': f'停止记录失败: {str(e)}'
                 }))
 
@@ -305,28 +329,13 @@ class EEGDataConsumer(AsyncWebsocketConsumer):
         from django.utils import timezone
         from asgiref.sync import sync_to_async
         from django.db.models import Max
-        
-        # 获取当前最大的 recording_id 并加1
         from .models import EEGRecord
-        try:
-            max_record = await sync_to_async(EEGRecord.objects.aggregate)(
-                Max('recording_id')
-            )
-            # 从数据库中获取最大值并加1，如果不存在记录则从1开始
-            max_id = max_record['recording_id__max']
-            if max_id is not None:
-                recording_id = str(int(max_id) + 1)
-            else:
-                recording_id = '1'
-        except Exception as e:
-            logger.error(f"获取最大recording_id失败: {str(e)}")
-            recording_id = '1'
         
         start_time = timezone.now()
         
+        # 不再手动设置 recording_id，让模型使用默认的 uuid.uuid4
         # 使用 sync_to_async 来执行同步的 Django ORM 操作
         record = await sync_to_async(EEGRecord.objects.create)(
-            recording_id=recording_id,
             start_time=start_time,
             end_time=start_time,  # 初始结束时间与开始时间相同
             name=name,
@@ -344,7 +353,8 @@ class EEGDataConsumer(AsyncWebsocketConsumer):
     async def increment_data_count(self, record):
         """增加数据计数"""
         from asgiref.sync import sync_to_async
-        await sync_to_async(lambda: setattr(record, 'data_count', record.data_count + 1))()
+        # 使用更安全的方法更新计数
+        record.data_count = record.data_count + 1
         await sync_to_async(record.save)()
 
     async def handle_analysis_request(self, data):

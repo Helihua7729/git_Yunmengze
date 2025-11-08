@@ -54,7 +54,7 @@ def serve_report(request, filename):
 #         # 确保日志目录存在
 #         log_dir = "logs"
 #         if not os.path.exists(log_dir):
-#             os.makedirs(log_dir)
+#         os.makedirs(log_dir)
         
 #         # 生成日志文件名
 #         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -176,19 +176,21 @@ def serve_report(request, filename):
 @csrf_exempt
 def import_eeg_data(request):
     """处理导入的EEG数据"""
+    logger.info("Import EEG data function called")
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': '只支持POST请求'}, status=400)
     
     try:
         # 获取API密钥（如果提供了的话）
-        api_key = "51e09aa5-d2dd-41ab-bf91-51ef798844e7"
+        
         if request.content_type == 'application/json':
             try:
                 json_data = json.loads(request.body)
                 api_key = json_data.get('api_key', api_key)
             except:
                 pass
-        
+        else :
+            api_key = "51e09aa5-d2dd-41ab-bf91-51ef798844e7"
         # 获取上传的文件
         if 'file' in request.FILES:
             uploaded_file = request.FILES['file']
@@ -205,6 +207,7 @@ def import_eeg_data(request):
                     file_content = uploaded_file.read().decode('gbk')
                 
                 # 解析并保存数据到数据库
+                logging.info("Parsing CSV/Text file")
                 saved_count, recording_id = _save_eeg_data_to_db(file_content, uploaded_file.name)
                 message = f"成功导入文本文件: {uploaded_file.name}，已保存 {saved_count} 条记录到数据库"
                 
@@ -257,13 +260,13 @@ def import_eeg_data(request):
 def _save_eeg_data_to_db(file_content, file_name=None):
     """将EEG数据保存到数据库"""
     from django.utils import timezone
-    
+    logging.info("Saving EEG data to database")
     lines = file_content.strip().split('\n')
     saved_count = 0
     
     if not lines:
         return saved_count, None
-        
+         
     # 解析第一行和最后一行的时间，用于创建EEGRecord
     first_timestamp = None
     last_timestamp = None
@@ -280,18 +283,17 @@ def _save_eeg_data_to_db(file_content, file_name=None):
     except (ValueError, IndexError):
         last_timestamp = timezone.now()
     
-    # 创建递增的recording_id，基于已有的记录数量
-    record_count = EEGRecord.objects.count()
-    recording_id = str(record_count + 1)
+ 
     
     eeg_record = EEGRecord(
-        recording_id=recording_id,
+        
         start_time=first_timestamp,
         end_time=last_timestamp,
         name=file_name or 'EEG_Recording',
         description=f'从文件导入的EEG数据: {file_name}',
         data_count=len(lines)
     )
+    recording_id = eeg_record.recording_id
     eeg_record.save()
     
     # 保存数据点
@@ -311,7 +313,7 @@ def _save_eeg_data_to_db(file_content, file_name=None):
                 
                 # 解析脑电波数据
                 eeg_data = _parse_eeg_data(raw_data)
-                
+                logger.info(f"EEG Data: ")
                 # 创建并保存EEGDataPoint对象
                 eeg_data_point = EEGDataPoint(
                     recording=eeg_record,
@@ -349,12 +351,7 @@ def _save_eeg_excel_data_to_db(df, file_name=None):
     first_timestamp = timezone.now()
     last_timestamp = timezone.now()
     
-    # 创建递增的recording_id，基于已有的记录数量
-    record_count = EEGRecord.objects.count()
-    recording_id = str(record_count + 1)
-    
     eeg_record = EEGRecord(
-        recording_id=recording_id,
         start_time=first_timestamp,
         end_time=last_timestamp,
         name=file_name or 'EEG_Recording',
@@ -362,6 +359,7 @@ def _save_eeg_excel_data_to_db(df, file_name=None):
         data_count=len(df)
     )
     eeg_record.save()
+    recording_id = eeg_record.recording_id
     
     # 转换为文本格式并保存到数据库
     with transaction.atomic():
@@ -455,12 +453,7 @@ def _save_eeg_json_data_to_db(json_data):
     if not data_list:
         return saved_count, None
         
-    # 创建递增的recording_id，基于已有的记录数量
-    record_count = EEGRecord.objects.count()
-    recording_id = str(record_count + 1)
-    
     eeg_record = EEGRecord(
-        recording_id=recording_id,
         start_time=timezone.now(),
         end_time=timezone.now(),
         name='JSON导入的EEG数据',
@@ -468,6 +461,7 @@ def _save_eeg_json_data_to_db(json_data):
         data_count=len(data_list)
     )
     eeg_record.save()
+    recording_id = eeg_record.recording_id
     
     with transaction.atomic():
         for data in data_list:
@@ -495,14 +489,11 @@ def _save_eeg_json_data_to_db(json_data):
     
     return saved_count, recording_id
 
-
-
-
-
     """待修改
 
       从数据库分析
     """
+@csrf_exempt
 @csrf_exempt
 def analyze_existing_data(request):
     """分析已有的数据文件"""
@@ -512,7 +503,46 @@ def analyze_existing_data(request):
     try:
         data = json.loads(request.body)
         file_path = data.get('file_path')
+        recording_id = data.get('recording_id')
         api_key = data.get('api_key', '51e09aa5-d2dd-41ab-bf91-51ef798844e7')
+        print()
+        print(file_path)
+        print(recording_id)
+        # 如果没有提供文件路径但提供了recording_id，则根据recording_id从数据库获取数据并生成临时文件
+        if not file_path and recording_id:
+            try:
+                from .models import EEGRecord, EEGDataPoint
+                import tempfile
+                import os
+                from django.conf import settings
+                
+                # 获取记录
+                record = EEGRecord.objects.get(recording_id=recording_id)
+                
+                # 获取该记录的所有数据点
+                data_points = EEGDataPoint.objects.filter(recording=record).order_by('time')
+                
+                if not data_points.exists():
+                    return JsonResponse({'status': 'error', 'message': '指定的记录没有数据'}, status=400)
+                
+                # 创建临时文件
+                temp_dir = os.path.join(settings.BASE_DIR, 'logs')
+                os.makedirs(temp_dir, exist_ok=True)
+                temp_file_path = os.path.join(temp_dir, f'temp_analysis_data_{recording_id}.txt')
+                
+                # 将数据点写入临时文件
+                with open(temp_file_path, 'w', encoding='utf-8') as f:
+                    for point in data_points:
+                        # 格式化数据行，与分析器兼容
+                        line = f"{point.time.strftime('%Y-%m-%d %H:%M:%S')} - Delta {point.delta} Theta {point.theta} LowAlpha {point.low_alpha} HighAlpha {point.high_alpha} LowBeta {point.low_beta} HighBeta {point.high_beta} LowGamma {point.low_gamma} HighGamma {point.high_gamma} Attention {point.attention} Meditation {point.meditation} SignalQuality {point.signal_quality}\n"
+                        f.write(line)
+                
+                file_path = temp_file_path
+                
+            except EEGRecord.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': '指定的记录不存在'}, status=400)
+            except Exception as e:
+                return JsonResponse({'status': 'error', 'message': f'处理记录数据失败: {str(e)}'}, status=400)
         
         if not file_path or not os.path.exists(file_path):
             return JsonResponse({'status': 'error', 'message': '指定的文件不存在'}, status=400)
@@ -520,18 +550,39 @@ def analyze_existing_data(request):
         # 执行分析
         print("开始分析数据...")
         analyzer = EEGAnalyzer(file_path, api_key)
-        report_content, report_filename = analyzer.analyze()
+        print("")
+        result = analyzer.analyze()
         
-        return JsonResponse({
-            'status': 'success',
-            'report_filename': report_filename,
-            'message': '分析完成'
-        })
+        # 如果是临时文件，分析完成后删除
+        if recording_id and 'temp_analysis_data_' in file_path:
+            try:
+                os.remove(file_path)
+            except:
+                pass
+        
+        # 正确处理分析结果（修复解包错误）
+        if isinstance(result, dict):
+            if result.get('status') == 'error':
+                return JsonResponse(result, status=400 if '不存在' in result.get('message', '') else 500)
+            else:
+                # 成功情况下的字典结构
+                return JsonResponse({
+                    'status': 'success',
+                    'report_filename': result.get('report_filename'),
+                    'message': result.get('message', '分析完成')
+                })
+        else:
+            # 兼容旧版本返回元组的情况
+            report_content, report_filename = result
+            return JsonResponse({
+                'status': 'success',
+                'report_filename': report_filename,
+                'message': '分析完成'
+            })
         
     except Exception as e:
         logger.error(f"分析数据失败: {str(e)}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
- 
  
 #  新增API接口：获取最新的EEG记录
 @csrf_exempt

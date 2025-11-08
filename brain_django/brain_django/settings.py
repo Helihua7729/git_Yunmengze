@@ -165,7 +165,7 @@ os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(ANALYSIS_DIR, exist_ok=True)
 
 # 火山引擎API密钥
-DEFAULT_API_KEY = "7a9d2091-b88e-4910-ac1b-b9301de2259f"
+DEFAULT_API_KEY = "51e09aa5-d2dd-41ab-bf91-51ef798844e7"
 
 # 添加安全设置以支持本地HTTPS开发
 SECURE_SSL_REDIRECT = False  # 在生产环境中应设为True
@@ -176,3 +176,44 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 SESSION_COOKIE_SECURE = False  # 在生产环境中应设为True
 CSRF_COOKIE_SECURE = False  # 在生产环境中应设为True
+
+
+# ... existing code ...
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'brain_start': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+# ... existing code ...

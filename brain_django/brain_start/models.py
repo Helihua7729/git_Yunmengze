@@ -1,10 +1,11 @@
+import uuid
 from django.db import models
 
 class EEGRecord(models.Model):
     """
     脑电有效信息记录
     """
-    recording_id = models.CharField(max_length=255, unique=True, verbose_name='记录ID')
+    recording_id = models.CharField(max_length=255, unique=True, verbose_name='记录ID',default=uuid.uuid4)
     start_time = models.DateTimeField(verbose_name='开始时间')
     end_time = models.DateTimeField(verbose_name='结束时间')
     name = models.CharField(max_length=255, default='EEG_Recording', verbose_name='记录名称')

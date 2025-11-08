@@ -1,6 +1,6 @@
 <template>
   <div class="card">
-    <h3><i class="el-icon-document"></i> 数据记录</h3>
+    <h3><i class="el-icon-document"></i> 最新记录</h3>
     <div class="data-status">
       <p v-if="latestRecord">记录名称: {{ latestRecord.name }}</p>
       <p v-if="latestRecord">开始时间: {{ formatDate(latestRecord.start_time) }}</p>
@@ -76,7 +76,7 @@ export default {
         this.showAllRecords = true;
       } catch (error) {
         console.error('Error loading all records:', error);
-        alert('无法加载历史记录');
+        this.$message.error('无法加载历史记录');
       }
     },
 
@@ -91,8 +91,12 @@ export default {
         this.selectedRecordDetails = this.allRecords.find(
           record => record.recording_id === this.selectedRecord
         );
+        // 向父组件传递选中的记录信息
+        this.$emit('record-selected', this.selectedRecordDetails);
       } else {
         this.selectedRecordDetails = null;
+        // 清除选中记录时通知父组件
+        this.$emit('record-selected', null);
       }
     }
   }

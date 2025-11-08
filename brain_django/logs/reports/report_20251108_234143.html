@@ -1,0 +1,129 @@
+
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>睡眠分析报告 20251108_234143</title>
+                <style>
+                    body { font-family: 'Microsoft YaHei', Arial, sans-serif; margin: 20px; line-height: 1.6; color: #333; }
+                    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px; }
+                    .stats-table { border-collapse: collapse; width: 100%; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+                    .stats-table th, .stats-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                    .stats-table th { background-color: #f8f9fa; }
+                    .section { background: white; padding: 25px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    h1, h2, h3 { color: #2c3e50; border-left: 4px solid #3498db; padding-left: 15px; }
+                    .error { color: #e74c3c; background: #ffeaa7; padding: 10px; border-radius: 5px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>🧠 睡眠脑电分析报告</h1>
+                    <p>生成时间: 2025-11-08 23:44:42 | 文件: temp_analysis_data_3.txt</p>
+                </div>
+                <div class="section"><div class='stats-section'><h3>数据统计概览</h3><table class='stats-table'><tr><th>频段</th><th>平均值</th><th>标准差</th><th>最小值</th><th>最大值</th></tr><tr><td>Delta</td><td>52143.38</td><td>195091.48</td><td>420.00</td><td>3023974.00</td></tr><tr><td>Theta</td><td>26180.99</td><td>92139.59</td><td>780.00</td><td>2136420.00</td></tr><tr><td>Alpha</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr><tr><td>Beta</td><td>26180.99</td><td>92139.59</td><td>780.00</td><td>2136420.00</td></tr><tr><td>Gamma</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr></table></div></div>
+                <div class="section"><div class='sleep-analysis'><h3>睡眠阶段分布</h3><ul><li>深睡期(Delta): 49.9%</li><li>浅睡期(Theta): 25.1%</li><li>REM期(Alpha): 0.0%</li><li>清醒期(Beta): 25.1%</li><li>活跃期(Gamma): 0.0%</li></ul><div class='sleep-score'><h4>睡眠质量评分: <span style='color: #f5222d'>52/100 (一般)</span></h4></div></div></div>
+                <div class="section"><h2>🤖 AI智能评估</h2>```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>睡眠脑电数据分析报告</title>
+    <style>
+        body {
+            font-family: "微软雅黑", sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        .section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #33;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #e6f0ff;
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: #4a6a85;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .score {
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>睡眠脑电数据分析报告</h1>
+
+    <!-- 睡眠质量总评估 -->
+    <div class="section">
+        <h2>一、睡眠质量总评估</h2>
+        <p>本次睡眠质量评分为 <span class="score">52/100</span>，属于 <span style="color:red">一般水平</span>，存在明显睡眠结构异常及脑电信号问题。</p>
+        <p><strong>核心问题总结</strong>：
+            <br>• <span style="color:red">REM睡眠完全缺失</span>
+            <br>• <span style="color:red">清醒期占比显著偏高</span>
+            <br>• <span style="color:red">部分脑电频段异常波动（Delta频段）</span>
+            <br>• <span style="color:red">Theta与Beta频段数据完全一致（分类偏差）</span>
+        </p>
+    </div>
+
+    <!-- 睡眠阶段详细分析 -->
+    <div class="section">
+        <h2>二、睡眠阶段详细分析</h2>
+        <ul>
+            <li><strong>深睡期（Delta频段）</strong>：占比49.9%（接近睡眠时长一半），但Delta频段<span style="color:red">标准差极大（195091.48）、最大值异常高（3023974）</span>，提示深睡期可能存在异常脑电活动（如睡眠呼吸暂停、异常放电等）。</li>
+            <li><strong>浅睡期（Theta频段）</strong>：占比25.1%，但Theta频段的均值、标准差、最值与Beta频段完全一致，提示<span style="color:red">脑电信号分类算法可能存在偏差</span>。</li>
+            <li><strong>REM期（Alpha频段）</strong>：占比<span style="color:red">0.0%</span>（完全缺失），对应Alpha频段均值为0，无REM睡眠特有的脑电特征，属于明显异常（正常REM占比约20%-25%）。</li>
+            <li><strong>清醒期（Beta频段）</strong>：占比25.1%，正常睡眠中清醒期占比应&lt;5%，此占比<span style="color:red">显著偏高</span>，提示睡眠中频繁觉醒、睡眠维持困难。</li>
+            <li><strong>活跃期（Gamma频段）</strong>：占比0.0%，对应Gamma频段均值为0，无大脑活跃状态特征。</li>
+        </ul>
+    </div>
+
+    <!-- 健康建议 -->
+    <div class="section">
+        <h2>三、针对性健康建议</h2>
+        
+        <h3>1. 改善REM睡眠缺失</h3>
+        <ul>
+            <li>固定作息：每天同一时间入睡/起床（包括周末），避免熬夜或过度补觉。</li>
+            <li>减少睡前刺激：睡前1小时远离电子设备（蓝光抑制褪黑素），避免剧烈运动、吸烟、饮酒。</li>
+            <li>优化睡眠环境：卧室保持黑暗（遮光帘）、安静（白噪音机辅助）、温度18-22℃。</li>
+        </ul>
+
+        <h3>2. 降低清醒期占比</h3>
+        <ul>
+            <li>建立睡前仪式：如温水泡脚（10分钟）、阅读纸质书，帮助身体进入放松状态。</li>
+            <li>避免卧床过久：若20分钟未入睡，起床做单调活动（叠衣服、听轻音乐），有睡意再返回床上。</li>
+            <li>限制咖啡因：下午22点后避免咖啡、茶、可乐等含咖啡因饮品。</li>
+        </ul>
+
+        <h3>3. 异常脑电活动的医疗建议</h3>
+        <p><span style="color:red">Delta频段异常波动（最大值过高）需高度重视</span>，建议尽快到<span style="color:red">神经内科或睡眠医学科</span>就诊，进一步检查：</p>
+        <ul>
+            <li>睡眠呼吸监测（排查睡眠呼吸暂停综合征）</li>
+            <li>多导睡眠图（PSG）复查（确认脑电分类偏差）</li>
+            <li>必要时脑部影像学检查（排查脑部异常）</li>
+        </ul>
+    </div>
+</body>
+</html>
+```</div>
+            </body>
+        </html>
+        
