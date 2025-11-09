@@ -183,9 +183,9 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 400px;
-  max-height: 600px;
-  height: 500px;
+  min-height: 600px;
+  max-height: 800px;
+  height: 700px;
 }
 
 .tab-pane-content {

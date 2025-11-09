@@ -271,7 +271,17 @@ export default {
           this.logContent += `[${new Date().toLocaleTimeString()}] 后端返回完整数据: ${JSON.stringify(data)}\n`
           
           if (data.status === 'success') {
-            if (!data.recording_id || !/^\d+$/.test(data.recording_id)) {
+            // 修复验证逻辑，支持UUID格式的recording_id
+            if (!data.recording_id) {
+              throw new Error(`后端未返回recording_id`)
+            }
+
+            // 验证UUID格式 (标准UUID格式)
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            // 或者验证更宽松的格式（包括您数据库中的格式）
+            const looseUuidRegex = /^[0-9a-f\-]+$/i;
+            
+            if (!uuidRegex.test(data.recording_id) && !looseUuidRegex.test(data.recording_id)) {
               throw new Error(`后端返回的recording_id无效：${data.recording_id}`)
             }
 
@@ -344,7 +354,7 @@ export default {
       }
 
       // 如果有已导入的文件，则询问是否分析该文件
-      if (this.currentRecordingId && this.importedFileName) {
+      if ( this.importedFileName) {
         this.$confirm(
           `检测到已导入文件：${this.importedFileName}（记录ID：${this.currentRecordingId}），是否直接分析该文件？`,
           '选择分析文件',
@@ -376,9 +386,9 @@ export default {
       this.reportContent = `<p style="color: #409EFF">正在分析数据（${this.importedFileName}），请稍候...</p>`
       this.activeTab = 'report'
       
-      // 构造请求参数
+      // 构造请求参数 - 修复：保持recording_id为原始格式
       const requestData = {
-        recording_id: parseInt(this.currentRecordingId, 10),
+        recording_id: this.currentRecordingId,  // 修复：不再转换为整数
         original_filename: this.importedFileName,
         api_key: this.apiKey.trim()
       }
@@ -939,5 +949,8 @@ export default {
 </script>
 
 <style scoped>
+.report-content * {
+  color: black !important;
+}
 /* ... existing styles ... */
 </style>
